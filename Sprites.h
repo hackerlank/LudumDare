@@ -1,4 +1,4 @@
-// Texture & Sprites Manager
+// Sprites Manager
 
 LPDIRECT3DTEXTURE9 LoadTexture(LPCSTR pSrcFile, LPDIRECT3DDEVICE9 pDevice) // Useful for loading textures
 {
@@ -56,6 +56,7 @@ public:
 class dxSprite
 {
 public:
+	float posX, posY;
 	LPDIRECT3DDEVICE9 m_pDevice; // Holding the DirectX device
 	RECT m_SrcRect; // Holding the whole rect
 	dxTexture* m_sTexture; // Holding a dxTexture object, which is used for holding the sprite's texture
@@ -67,8 +68,9 @@ public:
 		m_SrcRect.left = x, m_SrcRect.top = y, m_SrcRect.right = width, m_SrcRect.bottom = heignt;
 	}
 
-	dxSprite(LPDIRECT3DDEVICE9 pDevice) // Constructor - inits the sprite
+	dxSprite(LPDIRECT3DDEVICE9 pDevice,float x,float y) // Constructor - inits the sprite
 	{
+		setPos(x,y);
 		alive = true;
 		m_sTexture = new dxTexture(); // Our texture object
 		m_Sprite = NULL; // Our sprite temporarly will be equal to NULL
@@ -102,6 +104,11 @@ public:
 		m_Sprite->End(); // Ending to render
 	}
 
+	void setPos(float x,float y){
+		posX = x;
+		posY = y;
+	}
+
 	HRESULT Draw(DWORD flag){
 		if(alive){
 			startRender(flag); // Starting to render
@@ -116,7 +123,7 @@ public:
 	{
 		if((m_sTexture->m_Texture != NULL) && (m_Sprite != NULL)) // Making sure everything already inited
 		{
-			HRESULT Result = m_Sprite->Draw(m_sTexture->m_Texture,&m_SrcRect, NULL, NULL,0xFFFFFFFF); // drawing the sprite
+			HRESULT Result = m_Sprite->Draw(m_sTexture->m_Texture,&m_SrcRect, NULL, &D3DXVECTOR3(posX,posY,0),0xFFFFFFFF); // drawing the sprite
 			return Result; // Returning the result
 		}
 		else
@@ -127,7 +134,7 @@ public:
 
 };
 
-class dxMoveSprite : public dxSprite { // Moveable&animateable sprites class
+class dxMoveSprite : public dxSprite { // Moveable sprites class
 	public:
 		D3DXVECTOR2 m_RotationCenter; // Holding the rotation center
 		D3DXVECTOR2 m_Translation; // Holding the position 
@@ -138,12 +145,12 @@ class dxMoveSprite : public dxSprite { // Moveable&animateable sprites class
 		float spaceBetFrames; // Holding the pauses between frames
 		DWORD lastFrame; // Last frame updated
 
-	dxMoveSprite(LPDIRECT3DDEVICE9 pDevice):dxSprite(pDevice) // Constructor + Super
+	dxMoveSprite(LPDIRECT3DDEVICE9 pDevice):dxSprite(pDevice,0,0) // Constructor + Super
 	{
 		D3DXVECTOR2 Vec; // Holding temporarly the deafult vector (0,0)
 		Vec.x = 0, Vec.y = 0; // Defining the vector to (0,0)
 		m_RotationCenter = Vec, m_Translation = Vec, m_Movement = Vec,
-			m_Scaling = D3DXVECTOR2(0.5,0.5), m_Rotation = 0.0f; // Set all vars to the thier deafult value
+			m_Scaling = D3DXVECTOR2(1,1), m_Rotation = 0.0f; // Set all vars to the thier deafult value
 		frame = 0, spaceBetFrames = 0
 			, anim = 0; // Going to the first frame,space between frames equals to 0, and the animation status is the first deafult one
 		lastFrame = timeGetTime(); // Updating the last frame which is the first one, for now
@@ -194,7 +201,7 @@ class dxMoveSprite : public dxSprite { // Moveable&animateable sprites class
 		m_SrcRect.top = anim * (rectHeight+1) , m_SrcRect.bottom = m_SrcRect.top + rectHeight;
 		if(m_SrcRect.right > m_sTexture->width)
 			{
-			m_SrcRect.left = 0, m_SrcRect.right = rectWidth, frame = 0;
+				m_SrcRect.left = 0, m_SrcRect.right = rectWidth, frame = 0;
 			}
 		}
 	
